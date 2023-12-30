@@ -79,9 +79,7 @@ async function initializeKeyPair(connection: solanaWeb3.Connection): Promise<sol
     const keyPair= solanaWeb3.Keypair.fromSecretKey(secretKey);
     await airDropSOL(connection, keyPair);
     return keyPair;
-
     
-
 }
 
 async function sendSOL(connection: solanaWeb3.Connection, signer: solanaWeb3.Keypair, receiver: solanaWeb3.PublicKey, AmountOfSOLToSend : number){
@@ -89,6 +87,12 @@ async function sendSOL(connection: solanaWeb3.Connection, signer: solanaWeb3.Key
     const senderBalance= await connection.getBalance(sender);
     const receiverBalance= await connection.getBalance(receiver);
     console.log("Sender balance: ", senderBalance / solanaWeb3.LAMPORTS_PER_SOL, "SOL");
+    if (senderBalance<AmountOfSOLToSend){
+        console.log("Insufficient balance to send transaction");
+        console.log("Airdropping 1 SOL");
+        await airDropSOL(connection, signer);
+        await new Promise(resolve => setTimeout(resolve, 20000)); 
+    }
     console.log("Receiver balance: ", receiverBalance / solanaWeb3.LAMPORTS_PER_SOL, "SOL");
 
     var transaction = new solanaWeb3.Transaction().add(
@@ -102,7 +106,7 @@ async function sendSOL(connection: solanaWeb3.Connection, signer: solanaWeb3.Key
     const signature= await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [signer]);
 
     //print the transaction signature
-    console.log('SIGNATURE: ', signature);
+    console.log('TRANSACTION SIGNATURE: ', signature);
     //print balances
 
     //check if transaction is confirmed
@@ -110,7 +114,7 @@ async function sendSOL(connection: solanaWeb3.Connection, signer: solanaWeb3.Key
     console.log("Transaction confirmed: ", isConfirmed);
 
    // Wait for 5 second before checking balances again so that new balances are reflected
-        await new Promise(resolve => setTimeout(resolve, 10000)); 
+        await new Promise(resolve => setTimeout(resolve, 20000)); 
       
 
     const senderBalanceAfter= await connection.getBalance(sender);
