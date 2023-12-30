@@ -104,13 +104,32 @@ async function sendSOL(connection: solanaWeb3.Connection, signer: solanaWeb3.Key
     //print the transaction signature
     console.log('SIGNATURE: ', signature);
     //print balances
+
+    //check if transaction is confirmed
+    const isConfirmed= await isTransactionConfirmed(signature, connection);
+    console.log("Transaction confirmed: ", isConfirmed);
+
+   // Wait for 5 second before checking balances again so that new balances are reflected
+        await new Promise(resolve => setTimeout(resolve, 10000)); 
+      
+
     const senderBalanceAfter= await connection.getBalance(sender);
     const receiverBalanceAfter= await connection.getBalance(receiver);
     console.log("Sender balance: ", senderBalanceAfter / solanaWeb3.LAMPORTS_PER_SOL, "SOL");
     console.log("Receiver balance: ", receiverBalanceAfter / solanaWeb3.LAMPORTS_PER_SOL, "SOL");
 
-
 }
+
+async function isTransactionConfirmed(signature: solanaWeb3.TransactionSignature, connection: solanaWeb3.Connection) {
+
+    const latestBlockHash = await connection.getLatestBlockhash();
+    const confirmedTransaction= await connection.confirmTransaction({
+            blockhash: latestBlockHash.blockhash,
+            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+            signature: signature,
+          });
+    return confirmedTransaction !== null;
+  }
 
 async function main() {
     const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("devnet"));
